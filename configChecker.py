@@ -1,7 +1,10 @@
 from configparser import ConfigParser
 import os
+import logging
 
-class ConfigChecker(ConfigParser):
+log = logging.getLogger(__name__)
+
+class ConfigChecker():
 
     def __init__(self):
         self.expectations = []
@@ -13,6 +16,7 @@ class ConfigChecker(ConfigParser):
 
         entryExists,position = self.expectationExistsAtIndex(section,key)
         if entryExists:
+            log.warning("Attempting to and entry which already exists. Section: [{}], Key [{}]".format(section,key))
             return
 
         newExpection = {
@@ -24,11 +28,15 @@ class ConfigChecker(ConfigParser):
             'message' : message,
             }
         self.expectations.append(newExpection)
+        log.debug("Added new expectation with Section: [{}], Key [{}], DataType [{}], Default [{}]".format(section,key,dataType,default))
 
     def removeExpectation(self,section,key):
         entryExist, position = self.expectationExistsAtIndex(section,key)
         if entryExist:
+            log.debug("Removing expectation with Section: [{}], Key [{}]".format(section,key))
             self.expectations.pop(position)
+        else:
+            log.warning("Trying to remove expectation which doesn't exist. Section: [{}], Key [{}]".format(section,key))
 
     def expectationExistsAtIndex(self,section,key):
         for i,expectation in enumerate(self.expectations):
@@ -40,6 +48,7 @@ class ConfigChecker(ConfigParser):
         entryExists, position = self.expectationExistsAtIndex(section,key)
         if entryExists:
             return self.expectations[position]['value']
+        log.warning("Trying to retreive a value for an expectation which doean't exist. Section: [{}], Key [{}]".format(section,key))
         return None
 
     def printExpectations(self):
@@ -66,24 +75,31 @@ class ConfigChecker(ConfigParser):
         try:
             with open(filename,'w') as f:
                 newConfig.write(f)
+                log.debug("Writing a new configuration file '{}'".format(filename))
         except PermissionError:
+            log.warning("Failed writing configuration file '{} (Permission Error)'".format(filename))
             return False
         except OSError:
+            log.warning("Failed writing configuration file '{} (OS Error)'".format(filename))
             return False
         return True
 
     def setConfigurationFile(self,filename):
 
         if len(self.expectations) == 0:
+            log.warning("Trying to open a configuration file '{}' with no expectations set, nothins was loaded".format(filename))
             return False
         try:
             if len(self.configObject.read(filename)) == 0:
+                log.warning("Failed to open configuration file '{}'. Using default values for expectations".format(filename))
                 self._loadDefaultsWhereNeeded()
                 return False
         except:
+            log.warning("Failed to open configuration file '{}'. Using default values for expectations".format(filename))
             self._loadDefaultsWhereNeeded()
             return False
 
+        log.debug("Loading configuration file {}".format(filename));
         self._parseConfigValues()
         self._loadDefaultsWhereNeeded()
         return True
@@ -91,6 +107,9 @@ class ConfigChecker(ConfigParser):
     def _loadDefaultsWhereNeeded(self):
         for expectation in self.expectations:
             if expectation['value'] is None:
+                log.debug("Section [{}] with key [{}] not found in configuration file, using default value {}".format(expectation['section'],
+                    expectation['key'],
+                    expectation['default']))
                 expectation['value'] = expectation['default']
 
     def _parseConfigValues(self):
@@ -111,17 +130,34 @@ class ConfigChecker(ConfigParser):
     def _convertBoolean(self,section,key,position):
         try:
             self.expectations[position]['value'] = self.configObject.getboolean(section,key)
+            self._logConversionStatus(True,position)
         except:
             self.expectations[position]['value'] = self.expectations[position]['default']
+            self._logConversionStatus(False,position)
 
     def _convertFloat(self,section,key,position):
         try:
             self.expectations[position]['value'] = self.configObject.getfloat(section,key)
+            self._logConversionStatus(True,position)
         except:
             self.expectations[position]['value'] = self.expectations[position]['default']
+            self._logConversionStatus(False,position)
 
     def _convertInt(self,section,key,position):
         try:
             self.expectations[position]['value'] = self.configObject.getint(section,key)
+            self._logConversionStatus(True,position)
         except:
             self.expectations[position]['value'] = self.expectations[position]['default']
+            self._logConversionStatus(False,position)
+
+    def _logConversionStatus(self,sucess,position):
+        if sucess:
+            log.debug("Updating Section [{}] with key [{}] to value [{}] found in configuration file".format(self.expectations[position]['section'],
+                self.expectations[position]['key'],
+                self.expectations[position]['value']))
+        else:
+            log.warning("Section [{}] with key [{}] of configuration file cannot be parsed as [{}], using default value {}".format(self.expectations[position]['section'],
+                self.expectations[position]['key'],
+                self.expectations[position]['dataType'],
+                self.expectations[position]['default']))

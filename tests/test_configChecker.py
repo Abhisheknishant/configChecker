@@ -1,6 +1,8 @@
 import unittest
 from configChecker import ConfigChecker
 import os
+import logging
+logging.disable(logging.CRITICAL)
 
 good_config = \
 "[FirstSection]\n\
@@ -83,6 +85,10 @@ class FileOperationTests(unittest.TestCase):
     def tearDown(self):
         self.removeGoodConfigFile()
         self.removeBadConfigFile()
+        try:
+            os.remove('test_write.ini')
+        except:
+            pass
 
     def test_opening_bad_config_file_return_false(self):
         self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
