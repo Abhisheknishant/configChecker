@@ -1,16 +1,15 @@
 language: python
-python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
-  - "3.8-dev"
 
-os:
-  - linux
-dist:
-  - bionic
+jobs:
+  inlude:
+    - name: "Python 3.8 on Xenial Linux - x86_64"
+      python: 3.8
+      dist: xenial
+      arch: x86_64
+    - name: "Python 3.8 on bionic Linux - x86_64"
+      python: 3.8
+      dist: bionic
+      arch: x86_64
 
 install:
   - pip3 install -r requirements.txt
