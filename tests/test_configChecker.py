@@ -2,6 +2,9 @@ import unittest
 from configChecker import ConfigChecker
 import os
 import logging
+import sys
+from io import StringIO
+
 logging.disable(logging.CRITICAL)
 
 good_config = \
@@ -20,28 +23,40 @@ ForwardX11 = no\n"
 
 bad_config = "[asdff} asdfas[sd"
 
+expectedOutput ="Configuration Values\n\
+\n\
+Section:	 FirstSection\n\
+Key		 key_integer\n\
+Data Type:	 <class 'int'>\n\
+Value:		 None\n\
+Default Value:	 123\n\
+"
+
 class ExpectionTests(unittest.TestCase):
 
     def setUp(self):
         self.checker = ConfigChecker()
 
     def test_adding_item_increases_length(self):
-        self.checker.setExpectation("TestSection","TestKey",'TestType',"TestDefault");
-        self.checker.setExpectation("TestSection_second","TestKey",'TestType',"TestDefault");
+        self.checker.setExpectation("TestSection","TestKey",bool,False);
+        added = self.checker.setExpectation("TestSection_second","TestKey",bool,True);
         self.assertIs(len(self.checker.expectations),2,"Length of expectation list didn't increase when item was added.")
+        self.assertIs(added,True)
 
     def test_adding_duplicate_expectation_dont_duplicate(self):
-        self.checker.setExpectation("TestSection","TestKey",'TestType',"TestDefault");
-        self.checker.setExpectation("TestSection","TestKey",'TestType',"TestDefault");
+        self.checker.setExpectation("TestSection","TestKey",str,"TestDefault");
+        added = self.checker.setExpectation("TestSection","TestKey",str,"TestDefault");
         self.assertIs(len(self.checker.expectations),1,"Length of expectation list didn't increase when item was added.")
+        self.assertIs(added,False)
 
     def test_adding_duplicate_key_different_section_is_ok(self):
-        self.checker.setExpectation("TestSection","TestKey",'TestType',"TestDefault");
-        self.checker.setExpectation("TestSection_test","TestKey",'TestType',"TestDefault");
+        self.checker.setExpectation("TestSection","TestKey",int,123);
+        added = self.checker.setExpectation("TestSection_test","TestKey",int,1234);
         self.assertIs(len(self.checker.expectations),2,"Length of expectation list didn't increase when item was added.")
+        self.assertIs(added,True)
 
     def test_expectation_added_to_end_of_list_correctly_no_message(self):
-        self.checker.setExpectation("TestSection","TestKey","TestType","TestDefault");
+        self.checker.setExpectation("TestSection","TestKey",int,34);
         addedSection = self.checker.expectations[len(self.checker.expectations) - 1]['section']
         addedKey = self.checker.expectations[len(self.checker.expectations) - 1]['key']
         addedType = self.checker.expectations[len(self.checker.expectations) - 1]['dataType']
@@ -49,8 +64,8 @@ class ExpectionTests(unittest.TestCase):
         addedMessage = self.checker.expectations[len(self.checker.expectations ) - 1]['message']
         self.assertEqual(addedSection,'TestSection',"Added section doesn't match last section in list")
         self.assertEqual(addedKey,'TestKey',"Added key doesn't match last key in list")
-        self.assertEqual(addedType,'TestType',"Added type doesn't match last type in list")
-        self.assertEqual(addedDefault,'TestDefault',"Added default doesn't match last default in list")
+        self.assertEqual(addedType,int,"Added type doesn't match last type in list")
+        self.assertEqual(addedDefault,34,"Added default doesn't match last default in list")
         self.assertEqual(addedMessage,None,"Added message doesn't match last message in list")
 
     def test_expectation_added_to_end_of_list_correctly_with_message(self):
@@ -67,13 +82,53 @@ class ExpectionTests(unittest.TestCase):
         self.assertEqual(addedMessage,'TestMessage',"Added message doesn't match last message in list")
 
     def test_removeing_expectation_which_matches_section_and_key_reduces_list_number(self):
-        self.checker.setExpectation("TestSection","TestKey_2",'TestType',"TestDefault","TestMessage")
-        self.checker.setExpectation("TestSection","TestKey",'TestType',"TestDefault","TestMessage")
-        self.checker.removeExpectation("TestSection",'TestKey')
+        self.checker.setExpectation("TestSection","TestKey_2",bool,False,"TestMessage")
+        self.checker.setExpectation("TestSection","TestKey",int,23498,"TestMessage")
+        removed = self.checker.removeExpectation("TestSection",'TestKey')
         entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey_2")
         self.assertIs(len(self.checker.expectations),1,"Matching expectation wasn't removed from list.")
         self.assertIs(position,0)
         self.assertIs(entryExists,True)
+        self.assertIs(removed,True)
+
+    def test_removeing_expectation_which_doesnt_match_section_and_key_returns_false(self):
+        self.checker.setExpectation("TestSection","TestKey_2",bool,False,"TestMessage")
+        self.checker.setExpectation("TestSection","TestKey",int,23498,"TestMessage")
+        removed = self.checker.removeExpectation("badSecion",'TestKey')
+        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey_2")
+        self.assertIs(entryExists,True)
+        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey")
+        self.assertIs(entryExists,True)
+        self.assertIs(len(self.checker.expectations),2)
+        self.assertIs(removed,False)
+
+    def test_adding_expectation_with_wrong_default_type_returns_false_integer(self):
+        added = self.checker.setExpectation("FirstSection","key_integer",int,'asdfasd',"TestMessage")
+        self.assertIs(added,False);
+        self.assertIs(len(self.checker.expectations),0)
+
+    def test_adding_expectation_with_wrong_default_type_returns_false_float(self):
+        added = self.checker.setExpectation("FirstSection","key_float",float,'asdfasd',"TestMessage")
+        self.assertIs(added,False);
+        self.assertIs(len(self.checker.expectations),0)
+
+    def test_adding_expectation_with_wrong_default_type_returns_false_boolean(self):
+        added = self.checker.setExpectation("FirstSection","key_float",bool,'asdfasd',"TestMessage")
+        self.assertIs(added,False);
+        self.assertIs(len(self.checker.expectations),0)
+
+    def test_adding_expectation_with_not_allowed_data_type_returns_false(self):
+        added = self.checker.setExpectation("FirstSection","key_float",'asdf','asdfasd',"TestMessage")
+        self.assertIs(added,False);
+        self.assertIs(len(self.checker.expectations),0)
+
+    def test_printing_expectation_output(self):
+        added = self.checker.setExpectation("FirstSection","key_integer",int,123)
+        old_stdout = sys.stdout
+        sys.stdout = printOutput = StringIO()
+        self.checker.printExpectations()
+        sys.stdout = old_stdout
+        self.assertEqual(printOutput.getvalue(),expectedOutput)
 
 class FileOperationTests(unittest.TestCase):
 
@@ -198,8 +253,100 @@ class FileOperationTests(unittest.TestCase):
         written = self.checker.writeConfiguration('/root/test_config.ini')
         self.assertIs(written,False,"These tests and module shouldn't be run with root acccess.")
 
+    def test_writing_os_error_returs_false(self):
+
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+        self.checker.setExpectation("FirstSection","key_boolean",bool,False,"TestMessage")
+        self.checker.setExpectation("FirstSection","key_float",float,12123.1,"TestMessage")
+        self.checker.setExpectation("FirstSection","key_string",str,'A string',"TestMessage")
+        self.checker.setExpectation("SecondSection","key_string",str,'default',"TestMessage")
+
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        self.assertIs(opened,False)
+        written = self.checker.writeConfiguration('sdf/asdf')
+        self.assertIs(written,False)
+
     def test_writing_file_with_no_expectations_returns_false(self):
         written = self.checker.writeConfiguration('test_write.ini')
+        self.assertIs(written,False)
+
+    def test_can_change_the_value_of_an_expectation_int(self):
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_integer",45);
+        self.assertIs(written,True)
+        self.assertIs(self.checker.getValue("FirstSection","key_integer"),45)
+
+    def test_can_change_the_value_of_an_expectation_float(self):
+        self.checker.setExpectation("FirstSection","key_float",float,23.3,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_float",45.3);
+        self.assertIs(written,True)
+        self.assertIs(self.checker.getValue("FirstSection","key_float"),45.3)
+
+    def test_can_change_the_value_of_an_expectation_bool(self):
+        self.checker.setExpectation("FirstSection","key_boolean",bool,True,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_boolean",False);
+        self.assertIs(written,True)
+        self.assertIs(self.checker.getValue("FirstSection","key_boolean"),False)
+
+    def test_can_change_the_value_of_an_expectation_str(self):
+        self.checker.setExpectation("FirstSection","key_string",str,'asdf',"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_string",'qwer');
+        self.assertIs(written,True)
+        self.assertIs(self.checker.getValue("FirstSection","key_string"),'qwer')
+
+    def test_can_change_the_value_of_multiple_without_changing_others(self):
+        self.checker.setExpectation("FirstSection","key_string",str,'asdf',"TestMessage")
+        self.checker.setExpectation("FirstSection","key_boolean",bool,True,"TestMessage")
+        self.checker.setExpectation("FirstSection","key_float",float,23.3,"TestMessage")
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+
+        opened = self.checker.setConfigurationFile('test_write.ini')
+
+        written = self.checker.setValue("FirstSection","key_string",'qwer');
+        self.assertIs(written,True)
+        written = self.checker.setValue("FirstSection","key_float",45.3);
+        self.assertIs(written,True)
+        written = self.checker.setValue("FirstSection","key_integer",45);
+        self.assertIs(written,True)
+        written = self.checker.setValue("FirstSection","key_boolean",False);
+        self.assertIs(written,True)
+
+        self.assertIs(self.checker.getValue("FirstSection","key_string"),'qwer')
+        self.assertIs(self.checker.getValue("FirstSection","key_integer"),45)
+        written = self.checker.setValue("FirstSection","key_float",45.3);
+        self.assertIs(self.checker.getValue("FirstSection","key_boolean"),False)
+
+    def test_changing_value_of_expectation_which_doesnt_exist_returns_false(self):
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("WrongSection","key_integer",45);
+        self.assertIs(written,False)
+
+    def test_cannot_set_values_if_file_target_is_not_set(self):
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+        written = self.checker.setValue("FirstSection","key_integer",45);
+        self.assertIs(written,False)
+
+    def test_writing_incorrect_type_returns_false_integer(self):
+        self.checker.setExpectation("FirstSection","key_integer",int,23,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_integer",'sdfs');
+        self.assertIs(written,False)
+
+    def test_writing_incorrect_type_returns_false_float(self):
+        self.checker.setExpectation("FirstSection","key_float",float,23.3,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_float",'sdfs');
+        self.assertIs(written,False)
+
+    def test_writing_incorrect_type_returns_false_bool(self):
+        self.checker.setExpectation("FirstSection","key_boolean",bool,False,"TestMessage")
+        opened = self.checker.setConfigurationFile('test_write.ini')
+        written = self.checker.setValue("FirstSection","key_boolean",'sdf');
         self.assertIs(written,False)
 
     def makeGoodConfigFile(self):
@@ -228,7 +375,6 @@ class FileOperationTests(unittest.TestCase):
         except:
             pass
 
-
 class ReadingValuesTests(unittest.TestCase):
 
     def setUp(self):
@@ -247,4 +393,3 @@ class ReadingValuesTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main();
-
