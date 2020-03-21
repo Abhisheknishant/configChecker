@@ -1,0 +1,7 @@
+[run]
+source = .
+
+omit =
+    tests/*
+		configChecker/*
+		__init__.py
