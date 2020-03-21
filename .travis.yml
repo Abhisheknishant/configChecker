@@ -1,15 +1,67 @@
 language: python
 
 jobs:
-  inlude:
-    - name: "Python 3.8 on Xenial Linux - x86_64"
+  include:
+    - name: "Python 3.8 on Xenial Linux - amd64"
       python: 3.8
+      os: linux
       dist: xenial
-      arch: x86_64
-    - name: "Python 3.8 on bionic Linux - x86_64"
+      arch: amd64
+    - name: "Python 3.8 on bionic Linux - amd64"
       python: 3.8
+      os: linux
       dist: bionic
-      arch: x86_64
+      arch: amd64
+    - name: "Python 3.7 on Xenial Linux - amd64"
+      python: 3.7
+      os: linux
+      dist: xenial
+      arch: amd64
+    - name: "Python 3.7 on bionic Linux - amd64"
+      python: 3.7
+      os: linux
+      dist: bionic
+      arch: amd64
+    - name: "Python 3.6 on Xenial Linux - amd64"
+      python: 3.6
+      os: linux
+      dist: xenial
+      arch: amd64
+    - name: "Python 3.6 on bionic Linux - amd64"
+      python: 3.6
+      os: linux
+      dist: bionic
+      arch: amd64
+    - name: "Python 3.8 on Xenial Linux - arm64"
+      python: 3.8
+      os: linux
+      dist: xenial
+      arch: arm64
+    - name: "Python 3.8 on bionic Linux - arm64"
+      python: 3.8
+      os: linux
+      dist: bionic
+      arch: arm64
+    - name: "Python 3.7 on Xenial Linux - arm64"
+      python: 3.7
+      os: linux
+      dist: xenial
+      arch: arm64
+    - name: "Python 3.7 on bionic Linux - arm64"
+      python: 3.7
+      os: linux
+      dist: bionic
+      arch: arm64
+    - name: "Python 3.6 on Xenial Linux - arm64"
+      python: 3.6
+      os: linux
+      dist: xenial
+      arch: arm64
+    - name: "Python 3.6 on bionic Linux - arm64"
+      python: 3.6
+      os: linux
+      dist: bionic
+      arch: arm64
 
 install:
   - pip3 install -r requirements.txt
