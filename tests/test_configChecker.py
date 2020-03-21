@@ -44,60 +44,60 @@ class ExpectionTests(unittest.TestCase):
         self.assertIs(added,True)
 
     def test_adding_duplicate_expectation_dont_duplicate(self):
-        self.checker.setExpectation("TestSection","TestKey",str,"TestDefault");
-        added = self.checker.setExpectation("TestSection","TestKey",str,"TestDefault");
+        self.checker.setExpectation("TestSection","testKey",str,"TestDefault");
+        added = self.checker.setExpectation("TestSection","testkey",str,"TestDefault");
         self.assertIs(len(self.checker.getExpectations()),1,"Length of expectation list didn't increase when item was added.")
         self.assertIs(added,False)
 
     def test_adding_duplicate_key_different_section_is_ok(self):
-        self.checker.setExpectation("TestSection","TestKey",int,123);
-        added = self.checker.setExpectation("TestSection_test","TestKey",int,1234);
+        self.checker.setExpectation("TestSection","testKey",int,123);
+        added = self.checker.setExpectation("TestSection_test","testkey",int,1234);
         self.assertIs(len(self.checker.getExpectations()),2,"Length of expectation list didn't increase when item was added.")
         self.assertIs(added,True)
 
     def test_expectation_added_to_end_of_list_correctly_no_message(self):
-        self.checker.setExpectation("TestSection","TestKey",int,34);
+        self.checker.setExpectation("TestSection","testkey",int,34);
         addedSection = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['section']
         addedKey = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['key']
         addedType = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['dataType']
         addedDefault = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['default']
         addedMessage = self.checker.getExpectations()[len(self.checker.getExpectations() ) - 1]['message']
         self.assertEqual(addedSection,'TestSection',"Added section doesn't match last section in list")
-        self.assertEqual(addedKey,'TestKey',"Added key doesn't match last key in list")
+        self.assertEqual(addedKey,'testkey',"Added key doesn't match last key in list")
         self.assertEqual(addedType,int,"Added type doesn't match last type in list")
         self.assertEqual(addedDefault,34,"Added default doesn't match last default in list")
         self.assertEqual(addedMessage,None,"Added message doesn't match last message in list")
 
     def test_expectation_added_to_end_of_list_correctly_with_message(self):
-        self.checker.setExpectation("TestSection","TestKey",str,"TestDefault","TestMessage");
+        self.checker.setExpectation("TestSection","testkey",str,"TestDefault","TestMessage");
         addedSection = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['section']
         addedKey = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['key']
         addedType = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['dataType']
         addedDefault = self.checker.getExpectations()[len(self.checker.getExpectations()) - 1]['default']
         addedMessage = self.checker.getExpectations()[len(self.checker.getExpectations() ) - 1]['message']
         self.assertEqual(addedSection,'TestSection',"Added section doesn't match last section in list")
-        self.assertEqual(addedKey,'TestKey',"Added key doesn't match last key in list")
+        self.assertEqual(addedKey,'testkey',"Added key doesn't match last key in list")
         self.assertEqual(addedType,str,"Added type doesn't match last type in list")
         self.assertEqual(addedDefault,'TestDefault',"Added default doesn't match last default in list")
         self.assertEqual(addedMessage,'TestMessage',"Added message doesn't match last message in list")
 
     def test_removeing_expectation_which_matches_section_and_key_reduces_list_number(self):
-        self.checker.setExpectation("TestSection","TestKey_2",bool,False,"TestMessage")
-        self.checker.setExpectation("TestSection","TestKey",int,23498,"TestMessage")
-        removed = self.checker.removeExpectation("TestSection",'TestKey')
-        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey_2")
+        self.checker.setExpectation("TestSection","testkey_2",bool,False,"TestMessage")
+        self.checker.setExpectation("TestSection","testkey",int,23498,"TestMessage")
+        removed = self.checker.removeExpectation("TestSection",'testkey')
+        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","testkey_2")
         self.assertIs(len(self.checker.getExpectations()),1,"Matching expectation wasn't removed from list.")
         self.assertIs(position,0)
         self.assertIs(entryExists,True)
         self.assertIs(removed,True)
 
     def test_removeing_expectation_which_doesnt_match_section_and_key_returns_false(self):
-        self.checker.setExpectation("TestSection","TestKey_2",bool,False,"TestMessage")
-        self.checker.setExpectation("TestSection","TestKey",int,23498,"TestMessage")
-        removed = self.checker.removeExpectation("badSecion",'TestKey')
-        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey_2")
+        self.checker.setExpectation("TestSection","testkey_2",bool,False,"TestMessage")
+        self.checker.setExpectation("TestSection","testkey",int,23498,"TestMessage")
+        removed = self.checker.removeExpectation("badSecion",'testkey')
+        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","testkey_2")
         self.assertIs(entryExists,True)
-        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","TestKey")
+        entryExists,position = self.checker.expectationExistsAtIndex("TestSection","testkey")
         self.assertIs(entryExists,True)
         self.assertIs(len(self.checker.getExpectations()),2)
         self.assertIs(removed,False)
@@ -121,6 +121,30 @@ class ExpectionTests(unittest.TestCase):
         added = self.checker.setExpectation("FirstSection","key_float",'asdf','asdfasd',"TestMessage")
         self.assertIs(added,False);
         self.assertIs(len(self.checker.getExpectations()),0)
+
+    def test_section_names_cant_be_integer(self):
+        added = self.checker.setExpectation(123,"key_float",float,123.3,"TestMessage")
+        self.assertIs(added,False);
+
+    def test_section_names_cant_be_floats(self):
+        added = self.checker.setExpectation(1232.12,"key_float",float,123.3,"TestMessage")
+        self.assertIs(added,False);
+
+    def test_section_names_cant_be_boolean(self):
+        added = self.checker.setExpectation(True,"key_float",float,123.3,"TestMessage")
+        self.assertIs(added,False);
+
+    def test_key_names_cant_be_integer(self):
+        added = self.checker.setExpectation('Section',123,float,123.3,"TestMessage")
+        self.assertIs(added,False);
+
+    def test_key_names_cant_be_floats(self):
+        added = self.checker.setExpectation('Section',123.123,float,123.3,"TestMessage")
+        self.assertIs(added,False);
+
+    def test_key_names_cant_be_boolean(self):
+        added = self.checker.setExpectation('Section',True,float,123.3,"TestMessage")
+        self.assertIs(added,False);
 
     def test_printing_expectation_output(self):
         added = self.checker.setExpectation("FirstSection","key_integer",int,123)

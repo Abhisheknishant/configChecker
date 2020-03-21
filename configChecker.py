@@ -35,14 +35,25 @@ class ConfigChecker():
             self.__logWrongExpectationDataType(section,key,dataType,default);
             return False
 
+        if self.__isInteger(section) or self.___isFloat(section) or self.__isBoolean(section):
+            log.warning("Section names must be strings, passed name = [{}]".format(section))
+            return False
+
+        if self.__isInteger(key) or self.___isFloat(key) or self.__isBoolean(key):
+            log.warning("Section names must be strings, passed name = [{}]".format(section))
+            return False
+
         entryExists,position = self.expectationExistsAtIndex(section,key)
         if entryExists:
             log.warning("Attempting to and entry which already exists. Section: [{}], Key [{}]".format(section,key))
             return False
 
+        if not str(key).islower():
+            log.warning("Converting key [{}] to all lower case".format(key))
+
         newExpection = {
             'section' : section,
-            'key' : key,
+            'key' :  str(key).lower(),
             'value' : None,
             'dataType' : dataType,
             'default' : default,
