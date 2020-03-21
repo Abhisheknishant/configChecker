@@ -23,18 +23,12 @@ jobs:
     - name: "Python 3.6 on Xenial Linux - arm64"
       python: 3.6
       arch: arm64
-    - name: "Python 3.8 on Xenial Linux - arm32"
-      python: 3.8
-      arch: arm32
-    - name: "Python 3.7 on Xenial Linux - arm32"
-      python: 3.7
-      arch: arm32
-    - name: "Python 3.6 on Xenial Linux - arm32"
-      python: 3.6
-      arch: arm32
 
 install:
   - pip3 install -r requirements.txt
 
 script:
   - coverage run -m unittest discover
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
