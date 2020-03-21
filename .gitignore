@@ -1,4 +1,6 @@
 __init__.py
 tags
-
+configChecker
 __pycache__/
+htmlcov
+.coverage
