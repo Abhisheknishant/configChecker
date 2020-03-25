@@ -10,6 +10,7 @@ class ConfigChecker():
         self.__expectations = []
         self.__configObject = ConfigParser()
         self.__configReady = False
+        self.__configurationFile = None
 
     def getExpectations(self):
         return self.__expectations
@@ -162,10 +163,13 @@ class ConfigChecker():
             print("Value:\t\t",expectation['value'])
             print("Default Value:\t",expectation['default'])
 
-    def writeConfigurationFile(self,filename):
+    def writeConfigurationFile(self,filename = None):
 
         if len(self.__expectations) == 0:
             return False
+
+        if filename is None:
+            filename = self.__configurationFile
 
         newConfig = ConfigParser();
 
@@ -194,11 +198,13 @@ class ConfigChecker():
             if len(self.__configObject.read(filename)) == 0:
                 log.warning("Failed to open configuration file '{}'. Using default values for __expectations".format(filename))
                 self.__loadDefaultsWhereNeeded()
+                self.__configurationFile = filename;
                 self.__configReady = True;
                 return False
         except:
             log.warning("Failed to open configuration file '{}'. Using default values for __expectations".format(filename))
             self.__loadDefaultsWhereNeeded()
+            self.__configurationFile = filename;
             self.__configReady = True;
             return False
 
@@ -206,6 +212,7 @@ class ConfigChecker():
         self.___parseConfigValues()
         self.__loadDefaultsWhereNeeded()
         self.__configReady = True;
+        self.__configurationFile = filename;
         return True
 
     def __loadDefaultsWhereNeeded(self):
