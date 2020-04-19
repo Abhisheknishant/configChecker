@@ -59,7 +59,7 @@ class ExpectionTests(unittest.TestCase):
         self.checker.set_expectation("TestSection","testkey",int,34);
         addedSection = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['section']
         addedKey = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['key']
-        addedType = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['dataType']
+        addedType = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['data_type']
         addedDefault = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['default']
         addedMessage = self.checker.get_expectations()[len(self.checker.get_expectations() ) - 1]['message']
         self.assertEqual(addedSection,'TestSection',"Added section doesn't match last section in list")
@@ -72,7 +72,7 @@ class ExpectionTests(unittest.TestCase):
         self.checker.set_expectation("TestSection","testkey",str,"TestDefault","TestMessage");
         addedSection = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['section']
         addedKey = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['key']
-        addedType = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['dataType']
+        addedType = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['data_type']
         addedDefault = self.checker.get_expectations()[len(self.checker.get_expectations()) - 1]['default']
         addedMessage = self.checker.get_expectations()[len(self.checker.get_expectations() ) - 1]['message']
         self.assertEqual(addedSection,'TestSection',"Added section doesn't match last section in list")
