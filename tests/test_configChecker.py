@@ -264,6 +264,22 @@ class FileOperationTests(unittest.TestCase):
 
         os.remove('test_write.ini')
 
+    def test_writing_file_with_none_uses_existing_config_file_name(self):
+
+        self.checker.set_expectation("FirstSection","key_integer",int,23,"TestMessage")
+        self.checker.set_expectation("FirstSection","key_boolean",bool,False,"TestMessage")
+        self.checker.set_expectation("FirstSection","key_float",float,12123.1,"TestMessage")
+        self.checker.set_expectation("FirstSection","key_string",str,'A string',"TestMessage")
+        self.checker.set_expectation("SecondSection","key_string",str,'default',"TestMessage")
+
+        opened = self.checker.set_configuration_file('test_write.ini')
+        self.assertIs(opened,False)
+        written = self.checker.write_configuration_file(None)
+        self.assertIs(written,True)
+        self.assertIs(os.path.exists('test_write.ini'),True)
+
+        os.remove('test_write.ini')
+
     def test_writing_file_permission_error_returs_false(self):
 
         self.checker.set_expectation("FirstSection","key_integer",int,23,"TestMessage")
