@@ -2,8 +2,6 @@
 [![Codecov](https://img.shields.io/codecov/c/github/stuianna/configChecker)](https://codecov.io/gh/stuianna/configChecker)
 ![GitHub](https://img.shields.io/github/license/stuianna/configChecker)
 
-# Python Config Checker
-
 Python module wrapper around `ConfigParser` to ensure strict operation when working with configuration (.ini) files.
 
 ## Example Usage
@@ -17,19 +15,19 @@ conversion_factor = 123.456
 print_results = False
 ```
 
-Config parser can be used to ensure the expected values appear in the file, extra values are ignored and default values used as substitutes where entries are missing.
+Config parser can be used to ensure the expected values appear in the file, extra values are ignored with default values used as substitutes where entries are missing.
 
 ```python
-from comfigparser import ConfigParser
+from configchecker import ConfigChecker
 
 config = ConfigChecker()
 
 # Set the configuration values which are to be used.
 # set_expectations(SectionName,SectionOption,DataType,DefaultValue)
-config.set_expectations('General','api_key',str,'api-private-key')
-config.set_expectations('General','retries',int,5)
-config.set_expectations('General','conversion_factor',float,3.14)
-config.set_expectations('General','print_results',bool,True)
+config.set_expectation('General','api_key',str,'api-private-key')
+config.set_expectation('General','retries',int,5)
+config.set_expectation('General','conversion_factor',float,3.14)
+config.set_expectation('General','print_results',bool,True)
 
 # Try to load a configuration (.ini) file.
 # Any previously set expectation which exists in the file has its value updated.

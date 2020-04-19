@@ -1,5 +1,5 @@
 import unittest
-from configChecker import ConfigChecker
+from configchecker import ConfigChecker
 import os
 import logging
 import sys
